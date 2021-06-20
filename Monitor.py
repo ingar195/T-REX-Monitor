@@ -1,6 +1,7 @@
 import requests
 from colorama import Fore, init
 from pushbullet import Pushbullet
+import time
 
 
 def getData(address):
@@ -49,25 +50,36 @@ def ReadFile(fileName, lines):
 init(autoreset=True)
 
 
-servers = ["192.168.1.15",  "192.168.1.12", "192.1"]
+servers = ["192.168.1.15",  "192.168.1.12", "192.168.1.17", "192.168.1.43"]
+
+checkInterval = 1
 
 gpuFile = "gpu"
 gpuFileContent = ReadFile(gpuFile, True)
 
+alert = []
+
 pb = Pushbullet(ReadFile("pushbulletapikey", False))
 
-
-for server in servers:
-    hashRate = getHashRate(server)
-    gpu = getGPU(server)
-    if hashRate != "Error" and gpu != "Error":
-        for line in gpuFileContent:
-            if gpu in line:
+while True:
+    for server in servers:
+        print(Fore.YELLOW + server)
+        hashRate = getHashRate(server)
+        gpu = getGPU(server)
+        if hashRate != "Error" and gpu != "Error":
+            for line in gpuFileContent:
                 tmp = line.split("=")
                 minHash = int(tmp[1])
-                if hashRate <= minHash:
-                    msg = f"Hashrate on {server} with a {tmp[0]} is below minimal requirement:{hashRate}/{minHash} MH/s"
-                    print(Fore.RED + msg)
-                    pb.push_note(f"Low hashrate {server}", msg)
-    else:
-        pb.push_note(f"{server} Offline", f"{server} is offline")
+                if gpu == tmp[0]:     
+                    print(line)
+                    if hashRate <= minHash:
+                        msg = f"Hashrate on {server} with a {tmp[0]} is below minimal requirement:{hashRate}/{minHash} MH/s"
+                        print(Fore.RED + msg)
+                        pb.push_note(f"Low hashrate {server}", msg)
+                    else:
+                        print("{}/{}MH/s".format(hashRate, minHash))
+            print("-----------------------------")
+        else:
+            pb.push_note(f"{server} Offline", f"{server} is offline")
+    print("Will wait for {} minutes for next check".format(checkInterval))
+    time.sleep(checkInterval * 60)
