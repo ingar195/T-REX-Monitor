@@ -1,5 +1,6 @@
 import requests
 from colorama import Fore, init
+from pushbullet import Pushbullet
 
 
 def getData(address):
@@ -31,6 +32,15 @@ def getGPU(address):
         print(Fore.GREEN + GPU)
         return GPU
 
+def ReadFile(fileName, lines):
+    with open(fileName) as f:
+        if lines == True:
+            fileLines = f.readlines()
+        else:
+            fileLines = f.readline()
+    return fileLines
+
+
 
 init(autoreset=True)
 
@@ -38,18 +48,21 @@ init(autoreset=True)
 servers = ["192.168.1.15",  "192.168.1.12"]
 
 gpuFile = "gpu"
+gpuFileContent = ReadFile(gpuFile, True)
 
-with open(gpuFile) as f:
-    lines = f.readlines()
+pb = Pushbullet(ReadFile("pushbulletapikey", False))
+
 
 for server in servers:
     hashRate = getHashRate(server)
     gpu = getGPU(server)
-
-    for line in lines:
+    if hashRate == 0:
+        pb.push_note(f"{server} offline", f"{server} is offline")
+    for line in gpuFileContent:
         if gpu in line:
             tmp = line.split("=")
             minHash = int(tmp[1])
             if hashRate <= minHash:
-                print(
-                    Fore.RED + f"Hashrate on {server} with a {tmp[0]} is below minimal requrement:{hashRate}/{minHash} MH/s")
+                msg = f"Hashrate on {server} with a {tmp[0]} is below minimal requrement:{hashRate}/{minHash} MH/s"
+                print(Fore.RED + msg)
+                pb.push_note(f"Low hashrate {server}", msg) 
