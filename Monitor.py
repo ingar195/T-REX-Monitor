@@ -23,7 +23,8 @@ def getHashRate(address):
         hashRate = int(data["hashrate"]/1000000)
         print(Fore.GREEN + "{} MH/s".format(hashRate))
         return hashRate
-
+    else:
+        return "Error"
 
 def getGPU(address):
     data = getData(address)
@@ -31,6 +32,8 @@ def getGPU(address):
         GPU = data["gpus"][0]["name"]
         print(Fore.GREEN + GPU)
         return GPU
+    else:
+        return "Error"
 
 def ReadFile(fileName, lines):
     with open(fileName) as f:
@@ -45,7 +48,7 @@ def ReadFile(fileName, lines):
 init(autoreset=True)
 
 
-servers = ["192.168.1.15",  "192.168.1.12"]
+servers = ["192.168.1.15",  "192.168.1.12", "192.1"]
 
 gpuFile = "gpu"
 gpuFileContent = ReadFile(gpuFile, True)
@@ -56,13 +59,14 @@ pb = Pushbullet(ReadFile("pushbulletapikey", False))
 for server in servers:
     hashRate = getHashRate(server)
     gpu = getGPU(server)
-    if hashRate == 0:
+    if hashRate != "Error" and gpu != "Error":
+        for line in gpuFileContent:
+            if gpu in line:
+                tmp = line.split("=")
+                minHash = int(tmp[1])
+                if hashRate <= minHash:
+                    msg = f"Hashrate on {server} with a {tmp[0]} is below minimal requrement:{hashRate}/{minHash} MH/s"
+                    print(Fore.RED + msg)
+                    pb.push_note(f"Low hashrate {server}", msg) 
+    else:
         pb.push_note(f"{server} offline", f"{server} is offline")
-    for line in gpuFileContent:
-        if gpu in line:
-            tmp = line.split("=")
-            minHash = int(tmp[1])
-            if hashRate <= minHash:
-                msg = f"Hashrate on {server} with a {tmp[0]} is below minimal requrement:{hashRate}/{minHash} MH/s"
-                print(Fore.RED + msg)
-                pb.push_note(f"Low hashrate {server}", msg) 
