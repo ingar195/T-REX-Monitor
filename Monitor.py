@@ -26,6 +26,7 @@ def getHashRate(address):
     else:
         return "Error"
 
+
 def getGPU(address):
     data = getData(address)
     if data is not None:
@@ -35,6 +36,7 @@ def getGPU(address):
     else:
         return "Error"
 
+
 def ReadFile(fileName, lines):
     with open(fileName) as f:
         if lines == True:
@@ -42,7 +44,6 @@ def ReadFile(fileName, lines):
         else:
             fileLines = f.readline()
     return fileLines
-
 
 
 init(autoreset=True)
@@ -65,8 +66,8 @@ for server in servers:
                 tmp = line.split("=")
                 minHash = int(tmp[1])
                 if hashRate <= minHash:
-                    msg = f"Hashrate on {server} with a {tmp[0]} is below minimal requrement:{hashRate}/{minHash} MH/s"
+                    msg = f"Hashrate on {server} with a {tmp[0]} is below minimal requirement:{hashRate}/{minHash} MH/s"
                     print(Fore.RED + msg)
-                    pb.push_note(f"Low hashrate {server}", msg) 
+                    pb.push_note(f"Low hashrate {server}", msg)
     else:
-        pb.push_note(f"{server} offline", f"{server} is offline")
+        pb.push_note(f"{server} Offline", f"{server} is offline")
